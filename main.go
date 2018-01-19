@@ -87,7 +87,13 @@ func (g grid) columns() []column {
 }
 
 func (g grid) squares() []square {
-	
+	result := make([]square, 9)
+
+	for s := 0; s < 9; s++ {
+		// CONTINUE HERE.....................................
+	}
+
+	return result
 }
 
 func solve(g grid) grid {
