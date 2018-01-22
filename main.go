@@ -38,6 +38,19 @@ func (c column) String() string {
 
 type square []cell
 
+func (s square) String() string {
+	result := ""
+
+	for i, cell := range s {
+		result += fmt.Sprintf("%d ", cell.value)
+		if i == 2 || i == 5 {
+			result += "\n"
+		}
+	}
+
+	return result
+}
+
 type grid []cell
 
 func (g grid) String() string {
@@ -88,11 +101,19 @@ func (g grid) columns() []column {
 
 func (g grid) squares() []square {
 	result := make([]square, 9)
-
 	for s := 0; s < 9; s++ {
-		// CONTINUE HERE.....................................
+		var row int = s / 3
+		var col int = s % 3
+		square := make([]cell, 9)
+		si := 0
+		for r := row*3; r < row*3 + 3; r++ {
+			for c := col*3; c < col*3 + 3; c++ {
+				square[si] = g[r*9 + c]
+				si++
+			}
+		}
+		result[s] = square
 	}
-
 	return result
 }
 
@@ -129,8 +150,16 @@ func main() {
 
 	grid := buildTestGrid1()
 
+	// Remove this.
+	grid.squares()
+
 	fmt.Println("Solving:")
 	fmt.Println(grid)
+
+	for _, square := range grid.squares() {
+		fmt.Println(square)
+		fmt.Println()
+	}
 
 	solution := solve(grid)
 	
