@@ -8,6 +8,8 @@ import (
 type cell struct  {
 	value int
 	given bool
+	row int
+	column int
 }
 
 type row []cell
@@ -23,6 +25,15 @@ func (r row) String() string {
 	return result
 }
 
+func (r row) contains(n int) (bool, cell) {
+	for _, cell := range r {
+		if cell.value == n {
+			return true, cell
+		}
+	}
+	return false, cell{}
+}
+
 type column []cell
 
 func (c column) String() string {
@@ -34,6 +45,15 @@ func (c column) String() string {
 	result += "\n"
 
 	return result
+}
+
+func (c column) contains(n int) (bool, cell) {
+	for _, cell := range c {
+		if cell.value == n {
+			return true, cell
+		}
+	}
+	return false, cell{}
 }
 
 type square []cell
@@ -49,6 +69,15 @@ func (s square) String() string {
 	}
 
 	return result
+}
+
+func (s square) contains(n int) (bool, cell) {
+	for _, cell := range s {
+		if cell.value == n {
+			return true, cell
+		}
+	}
+	return false, cell{}
 }
 
 type grid []cell
@@ -117,10 +146,53 @@ func (g grid) squares() []square {
 	return result
 }
 
-func solve(g grid) grid {
-	result := g
+func (g grid) isComplete() bool {
+	result := true
+
+	for _, cell := range g {
+		if cell.value == 0 {
+			result = false
+			break
+		}
+	}
 
 	return result
+}
+
+func simpleSolve(g grid) (bool, grid) {
+	changed := false
+	for guess := 1 ; guess < 10; guess++ {
+		for _, square := range g.squares() {
+			answer := cell{}
+			answerCount := 0
+			if ok, _ := square.contains(guess); !ok {
+				for _, trial := range square {
+					if(trial.value == 0) {
+						if ok, _ := g.rows()[trial.row].contains(guess); !ok {
+							if ok, _ := g.columns()[trial.column].contains(guess); !ok {
+								answer = cell {
+									row: trial.row,
+									column: trial.column,
+									given: trial.given,
+									value: guess,
+								}
+								answerCount++
+							} else {
+								continue
+							}
+						} else {
+							continue
+						}
+					}
+				}
+				if(answerCount == 1) {
+					g[answer.row*9+answer.column].value = answer.value
+					changed = true
+				}
+			}
+		}
+	}
+	return changed, g
 }
 
 func buildFromString(s string) grid {
@@ -135,34 +207,41 @@ func buildFromString(s string) grid {
 		if(err != nil) {
 			panic(err)
 		}
-		result[i] = cell{value: d, given: c!='0'}
+		result[i] = cell{value: d, given: c!='0', row: i/9, column: i%9}
 	}
 
 	return result
 }
 
 func buildTestGrid1() grid {
-	return buildFromString("000090000065000380030000050000209000709603208000401000607908102040506090092030560")
+	return buildFromString("000090000065000380030000050000209000709603208000401000607000102040506090092030560")
+}
+
+func buildTestGrid2() grid {
+	return buildFromString("000005019063000000050070638008027050009000800020310900634090080000000260870500000")
+}
+
+func buildTestGrid3() grid {
+	return buildFromString("400086000020007100007250090500010043000008602600300900150000200003000080208503004")
 }
 
 func main() {
 	fmt.Println()
 
-	grid := buildTestGrid1()
-
-	// Remove this.
-	grid.squares()
+	grid := buildTestGrid3()
 
 	fmt.Println("Solving:")
 	fmt.Println(grid)
 
-	for _, square := range grid.squares() {
-		fmt.Println(square)
-		fmt.Println()
+	iterations := 0
+
+	for changed, grid := false, grid;
+		!grid.isComplete() || !changed;
+		changed, grid = simpleSolve(grid) {
+		iterations++
 	}
 
-	solution := solve(grid)
-	
 	fmt.Println("Solution is:")
-	fmt.Println(solution)
+	fmt.Println(grid)
+	fmt.Printf("(%v iterations)\n", iterations)
 }
